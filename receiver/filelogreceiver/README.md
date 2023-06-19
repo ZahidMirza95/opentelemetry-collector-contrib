@@ -17,37 +17,37 @@ Tails and parses logs from files.
 
 ## Configuration
 
-| Field                               | Default                              | Description                                                                                                                                                                                                                                                     |
-|-------------------------------------|--------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `include`                           | required                             | A list of file glob patterns that match the file paths to be read                                                                                                                                                                                               |
-| `exclude`                           | []                                   | A list of file glob patterns to exclude from reading                                                                                                                                                                                                            |
-| `start_at`                          | `end`                                | At startup, where to start reading logs from the file. Options are `beginning` or `end`                                                                                                                                                                         |
-| `multiline`                         |                                      | A `multiline` configuration block. See below for more details                                                                                                                                                                                                   |
-| `force_flush_period`                | `500ms`                              | Time since last read of data from file, after which currently buffered log should be send to pipeline. Takes `time.Duration` (e.g. `10s`, `1m`, or `500ms`) as value. Zero means waiting for new data forever                                                   |
-| `encoding`                          | `utf-8`                              | The encoding of the file being read. See the list of supported encodings below for available options                                                                                                                                                            |
-| `preserve_leading_whitespaces`      | `false`                              | Whether to preserve leading whitespaces.                                                                                                                                                                                                                        |
-| `preserve_trailing_whitespaces`     | `false`                              | Whether to preserve trailing whitespaces.                                                                                                                                                                                                                       |
-| `include_file_name`                 | `true`                               | Whether to add the file name as the attribute `log.file.name`.                                                                                                                                                                                                  |
-| `include_file_path`                 | `false`                              | Whether to add the file path as the attribute `log.file.path`.                                                                                                                                                                                                  |
-| `include_file_name_resolved`        | `false`                              | Whether to add the file name after symlinks resolution as the attribute `log.file.name_resolved`.                                                                                                                                                               |
-| `include_file_path_resolved`        | `false`                              | Whether to add the file path after symlinks resolution as the attribute `log.file.path_resolved`.                                                                                                                                                               |
-| `poll_interval`                     | 200ms                                | The duration between filesystem polls                                                                                                                                                                                                                           |
-| `fingerprint_size`                  | `1kb`                                | The number of bytes with which to identify a file. The first bytes in the file are used as the fingerprint. Decreasing this value at any point will cause existing fingerprints to forgotten, meaning that all files will be read from the beginning (one time) |
-| `max_log_size`                      | `1MiB`                               | The maximum size of a log entry to read. A log entry will be truncated if it is larger than `max_log_size`. Protects against reading large amounts of data into memory                                                                                          |
-| `max_concurrent_files`              | 1024                                 | The maximum number of log files from which logs will be read concurrently. If the number of files matched in the `include` pattern exceeds this number, then files will be processed in batches.                                                                |
-| `max_batches`                       | 0                                    | Only applicable when files must be batched in order to respect `max_concurrent_files`. This value limits the number of batches that will be processed during a single poll interval. A value of 0 indicates no limit.                                           |
-| `delete_after_read`                 | `false`                              | If `true`, each log file will be read and then immediately deleted. Requires that the `filelog.allowFileDeletion` feature gate is enabled.                                                                                                                      |
-| `attributes`                        | {}                                   | A map of `key: value` pairs to add to the entry's attributes                                                                                                                                                                                                    |
-| `resource`                          | {}                                   | A map of `key: value` pairs to add to the entry's resource                                                                                                                                                                                                      |
-| `operators`                         | []                                   | An array of [operators](../../pkg/stanza/docs/operators/README.md#what-operators-are-available). See below for more details                                                                                                                                     |
-| `storage`                           | none                                 | The ID of a storage extension to be used to store file checkpoints. File checkpoints allow the receiver to pick up where it left off in the case of a collector restart. If no storage extension is used, the receiver will manage checkpoints in memory only.  |
-| `header`                            | nil                                  | Specifies options for parsing header metadata. Requires that the `filelog.allowHeaderMetadataParsing` feature gate is enabled. See below for details.                                                                                                           |
-| `header.pattern`                    | required for header metadata parsing | A regex that matches every header line.                                                                                                                                                                                                                         |
-| `header.metadata_operators`         | required for header metadata parsing | A list of operators used to parse metadata from the header.                                                                                                                                                                                                     |
-| `retry_on_failure.enabled`          | `false`                              | If `true`, the receiver will pause reading a file and attempt to resend the current batch of logs if it encounters an error from downstream components.                                                                                                         |
-| `retry_on_failure.initial_interval` | `1 second`                           | Time to wait after the first failure before retrying.                                                                                                                                                                                                           |
-| `retry_on_failure.max_interval`     | `30 seconds`                         | Upper bound on retry backoff interval. Once this value is reached the delay between consecutive retries will remain constant at the specified value.                                                                                                            |
-| `retry_on_failure.max_elapsed_time` | `5 minutes`                          | Maximum amount of time (including retries) spent trying to send a logs batch to a downstream consumer. Once this value is reached, the data is discarded. Retrying never stops if set to `0`.                                                                   |
+| Field                               | Default                              | Description                                                                                                                                                                                                                                                                                 |
+|-------------------------------------|--------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `include`                           | required                             | A list of file glob patterns that match the file paths to be read                                                                                                                                                                                                                           |
+| `exclude`                           | []                                   | A list of file glob patterns to exclude from reading                                                                                                                                                                                                                                        |
+| `start_at`                          | `end`                                | At startup, where to start reading logs from the file. Options are `beginning` or `end`                                                                                                                                                                                                     |
+| `multiline`                         | `\n`                                  | A `multiline` configuration block. See below for more details.                                                                                                                                                                                                                              |
+| `force_flush_period`                | `500ms`                              | Time since last read of data from file, after which currently buffered log should be send to pipeline. Takes `time.Duration` (e.g. `10s`, `1m`, or `500ms`) as value. Zero means waiting for new data forever                                                                               |
+| `encoding`                          | `utf-8`                              | The encoding of the file being read. See the list of supported encodings below for available options                                                                                                                                                                                        |
+| `preserve_leading_whitespaces`      | `false`                              | Whether to preserve leading whitespaces.                                                                                                                                                                                                                                                    |
+| `preserve_trailing_whitespaces`     | `false`                              | Whether to preserve trailing whitespaces.                                                                                                                                                                                                                                                   |
+| `include_file_name`                 | `true`                               | Whether to add the file name as the attribute `log.file.name`.                                                                                                                                                                                                                              |
+| `include_file_path`                 | `false`                              | Whether to add the file path as the attribute `log.file.path`.                                                                                                                                                                                                                              |
+| `include_file_name_resolved`        | `false`                              | Whether to add the file name after symlinks resolution as the attribute `log.file.name_resolved`.                                                                                                                                                                                           |
+| `include_file_path_resolved`        | `false`                              | Whether to add the file path after symlinks resolution as the attribute `log.file.path_resolved`.                                                                                                                                                                                           |
+| `poll_interval`                     | 200ms                                | The duration between filesystem polls in milliseconds.                                                                                                                                                                                                                                      |
+| `fingerprint_size`                  | `100 bytes (1kb)`                    | The number of bytes with which to identify a file. The first bytes in the file are used as the fingerprint. Decreasing this value at any point will cause existing fingerprints to forgotten, meaning that all files will be read from the beginning (one time). Minimum value is 16 bytes. |
+| `max_log_size`                      | `1048576 bytes (1MiB)`               | The maximum size of a log entry to read in bytes. A log entry will be truncated if it is larger than `max_log_size`. Protects against reading large amounts of data into memory.                                                                                                            |
+| `max_concurrent_files`              | 1024                                 | The maximum number of log files from which logs will be read concurrently. If the number of files matched in the `include` pattern exceeds this number, then files will be processed in batches. Minimum value is 1.                                                                        |
+| `max_batches`                       | 0                                    | Only applicable when files must be batched in order to respect `max_concurrent_files`. This value limits the number of batches that will be processed during a single poll interval. A value of 0 indicates no limit.                                                                       |
+| `delete_after_read`                 | `false`                              | If `true`, each log file will be read and then immediately deleted. Requires that the `filelog.allowFileDeletion` feature gate is enabled. Cannot use if start_at is set to "end".                                                                                                          |
+| `attributes`                        | {}                                   | A map of `key: value` pairs to add to the entry's attributes                                                                                                                                                                                                                                |
+| `resource`                          | {}                                   | A map of `key: value` pairs to add to the entry's resource                                                                                                                                                                                                                                  |
+| `operators`                         | []                                   | An array of [operators](../../pkg/stanza/docs/operators/README.md#what-operators-are-available). See below for more details                                                                                                                                                                 |
+| `storage`                           | none                                 | The ID of a storage extension to be used to store file checkpoints. File checkpoints allow the receiver to pick up where it left off in the case of a collector restart. If no storage extension is used, the receiver will manage checkpoints in memory only.                              |
+| `header`                            | nil                                  | Specifies options for parsing header metadata. Requires that the `filelog.allowHeaderMetadataParsing` feature gate is enabled. Cannot use if start_at is set to "end". See below for details.                                                                                               |
+| `header.pattern`                    | required for header metadata parsing | A regex that matches every header line.                                                                                                                                                                                                                                                     |
+| `header.metadata_operators`         | required for header metadata parsing | A list of operators used to parse metadata from the header.                                                                                                                                                                                                                                 |
+| `retry_on_failure.enabled`          | `false`                              | If `true`, the receiver will pause reading a file and attempt to resend the current batch of logs if it encounters an error from downstream components.                                                                                                                                     |
+| `retry_on_failure.initial_interval` | `1 second`                           | Time to wait after the first failure before retrying.                                                                                                                                                                                                                                       |
+| `retry_on_failure.max_interval`     | `30 seconds`                         | Upper bound on retry backoff interval. Once this value is reached the delay between consecutive retries will remain constant at the specified value.                                                                                                                                        |
+| `retry_on_failure.max_elapsed_time` | `5 minutes`                          | Maximum amount of time (including retries) spent trying to send a logs batch to a downstream consumer. Once this value is reached, the data is discarded. Retrying never stops if set to `0`.                                                                                               |
 
 Note that _by default_, no logs will be read from a file that is not actively being written to because `start_at` defaults to `end`.
 
@@ -111,4 +111,66 @@ receivers:
           parse_from: attributes.time
           layout: '%Y-%m-%d %H:%M:%S'
 ```
+## Example - Using filelog receiver with [ADOT](https://github.com/aws-observability/aws-otel-collector) (AWS Distro for OpenTelemetry)
+DISCLAIMER: ADOT doesn't officially support the filelog receiver yet, so the below example is a temporary workaround to get it working
 
+This example will show how to get the filelog receiver working with ADOT. This example will use the file log receiver to ingest logs from a file, and then export them to the console. Follow these steps to get it running:
+
+1. Add the following info to config-test.yaml file (or create your own .yaml file by copying and pasting contents from the config-test.yaml file)
+
+In the receivers section, ensure it looks like this:
+```yaml
+receivers:
+  filelog:
+    include: [ /simple.log ]
+    operators:
+      - type: regex_parser
+        regex: '^(?P<time>\d{4}-\d{2}-\d{2}) (?P<sev>[A-Z]*) (?P<msg>.*)$'
+    timestamp:
+      parse_from: attributes.time
+      layout: '%Y-%m-%d'
+    severity:
+      parse_from: attributes.sev
+```
+
+In the exporters section, use whichever exporter you like. In this example, we'll be using the logging exporter:
+```yaml
+exporters:
+  logging:
+    loglevel: debug
+```
+
+In the service section, ensure it looks like this:
+
+```yaml
+service:
+  pipelines:
+    logs:
+      receivers: [filelog]
+      exporters: [logging]
+```
+
+2. In the docker-compose.yaml file, change the image in the aws-otel-collector to the below (you will need to pull the image if you don't have it already). This step is a TEMPORARY workaround to get the filelogreceiver working with ADOT, this will be removed once it becomes officially supported:
+
+```
+ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.79.0
+```
+
+3. Create the log file. In this example, the log file is created from this file path -> aws-otel-collector/examples/docker/testdata/simple.log. The format of the logs in the log file should match the regular expression specified (in this case logs should be in the format: "yyyy-mm-dd [A-Z]* .*"). 
+Example of a log in this format: 
+```
+2023-06-19 SEVERE This is a log
+```
+
+
+4. Everything is set up now, so all that's left to do is run ADOT. Be sure to run it in the root directory (i.e. aws-otel-collector). To run the ADOT collector, use the command below:
+
+```
+docker run --rm -p 4317:4317 -p 55680:55680 -p 8889:8888 \
+      -v "${PWD}/examples/docker/config-test.yaml":/otel-local-config.yaml \
+-v “${PWD}/examples/docker/testdata/simple.log”:/simple.log \
+      --name awscollector-contrib ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.79.0 \
+      --config otel-local-config.yaml;
+```
+
+To test if this works, log data to the log file (make sure to save it after logging data to it), and check the console to see if the logs show up there.
