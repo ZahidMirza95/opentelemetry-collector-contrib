@@ -143,5 +143,3 @@ The above configuration will read logs from the "simple.log" file. Some examples
 2023-06-19 05:20:50 ERROR This is a test error message
 2023-06-20 12:50:00 DEBUG This is a test debug message
 ```
-
-
