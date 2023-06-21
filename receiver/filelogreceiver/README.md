@@ -31,7 +31,7 @@ Tails and parses logs from files.
 | `include_file_path`                 | `false`                              | Whether to add the file path as the attribute `log.file.path`.                                                                                                                                                                                                                                     |
 | `include_file_name_resolved`        | `false`                              | Whether to add the file name after symlinks resolution as the attribute `log.file.name_resolved`.                                                                                                                                                                                                  |
 | `include_file_path_resolved`        | `false`                              | Whether to add the file path after symlinks resolution as the attribute `log.file.path_resolved`.                                                                                                                                                                                                  |
-| `poll_interval`                     | 200ms                                | The duration between filesystem polls. The duration can contain the unit of time (e.g.: 200ms, 1s, 1m.).                                                                                                                                                                                           |
+| `poll_interval`                     | 200ms                                | The duration between filesystem polls. The duration must contain the unit of time (e.g.: 200ms, 1s, 1m.) otherwise an error will be caused.                                                                                                                                                                                           |
 | `fingerprint_size`                  | `1kb`                                | The number of bytes with which to identify a file. The first bytes in the file are used as the fingerprint. Decreasing this value at any point will cause existing fingerprints to forgotten, meaning that all files will be read from the beginning (one time)                                    |
 | `max_log_size`                      | `1MiB`                               | The maximum size of a log entry to read. A log entry will be truncated if it is larger than `max_log_size`. Protects against reading large amounts of data into memory.                                                                                                                            |
 | `max_concurrent_files`              | 1024                                 | The maximum number of log files from which logs will be read concurrently. If the number of files matched in the `include` pattern exceeds this number, then files will be processed in batches.                                                                                                   |
@@ -98,15 +98,6 @@ The header lines are not emitted by the receiver.
 
 Many parsers operators can be configured to embed certain followup operations such as timestamp and severity parsing. For more information, see [complex parsers](../../pkg/stanza/docs/types/parsers.md#complex-parsers).
 
-### Log Rotation
-
-Log Rotation is supported for File Log Receiver, but the following settings need to be configured:
-
-- `poll_interval`: `10ms` (can adjust to fit your use case)
-- `start_at`: `beginning`
-
-External software needs to be used in order to do log rotation. For example, [logrotate](https://linux.die.net/man/8/logrotate) can be used to handle log rotation.
-
 ## Example - Tailing a simple json file
 
 Receiver Configuration
@@ -119,28 +110,5 @@ receivers:
         timestamp:
           parse_from: attributes.time
           layout: '%Y-%m-%d %H:%M:%S'
-```
-
-## Example - Reading from a log file
-
-Receiver Configuration
-```yaml
-receivers:
-  filelog:
-    include: [ /simple.log ]
-    operators:
-      - type: regex_parser
-        regex: '^(?P<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (?P<sev>[A-Z]*) (?P<msg>.*)$'
-        timestamp:
-          parse_from: attributes.time
-          layout: '%Y-%m-%d %H:%M:%S'
-        severity:
-          parse_from: attributes.sev
-```
-
-The above configuration will read logs from the "simple.log" file. Some examples of logs that it will read:
-```
-2023-06-19 05:20:50 ERROR This is a test error message
-2023-06-20 12:50:00 DEBUG This is a test debug message
 ```
 
